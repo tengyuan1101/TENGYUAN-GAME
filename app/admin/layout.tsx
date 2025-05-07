@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { ppEditorialNewUltralightItalic } from "../fonts"
 import { Button } from "@/components/ui/button"
-import { Home, GamepadIcon, MessageSquare, Users, BarChart, Settings, LogOut, Menu, X } from "lucide-react"
+import { Home, GamepadIcon, MessageSquare, Users, BarChart, Settings, LogOut, Menu, X, ImageIcon } from "lucide-react"
 
 export default function AdminLayout({
   children,
@@ -59,6 +59,7 @@ export default function AdminLayout({
     { icon: <GamepadIcon size={20} />, label: "游戏管理", path: "/admin/games" },
     { icon: <MessageSquare size={20} />, label: "评论管理", path: "/admin/comments" },
     { icon: <Users size={20} />, label: "用户管理", path: "/admin/users" },
+    { icon: <ImageIcon size={20} />, label: "轮播图管理", path: "/admin/carousel" },
     { icon: <BarChart size={20} />, label: "数据统计", path: "/admin/statistics" },
     { icon: <Settings size={20} />, label: "系统设置", path: "/admin/settings" },
   ]

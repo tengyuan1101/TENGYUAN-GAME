@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, Search, X } from "lucide-react"
 import CarouselBanner from "../components/CarouselBanner"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>(allGames)
@@ -29,6 +30,7 @@ export default function Home() {
   const [showSearch, setShowSearch] = useState(false)
 
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const router = useRouter()
 
   // 加载收藏的游戏
   useEffect(() => {
@@ -95,7 +97,8 @@ export default function Home() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
             <h1
-              className={`${ppEditorialNewUltralightItalic.className} text-2xl md:text-3xl font-light italic text-[#ff6b4a]/90 tracking-tighter`}
+              className={`${ppEditorialNewUltralightItalic.className} text-2xl md:text-3xl font-light italic text-[#ff6b4a]/90 tracking-tighter cursor-pointer`}
+              onClick={() => router.push("/")}
             >
               藤原の游戏小站
             </h1>
@@ -249,7 +252,8 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div
-              className={`${ppEditorialNewUltralightItalic.className} text-xl font-light italic text-[#ff6b4a]/90 tracking-tighter mb-4 md:mb-0`}
+              className={`${ppEditorialNewUltralightItalic.className} text-xl font-light italic text-[#ff6b4a]/90 tracking-tighter mb-4 md:mb-0 cursor-pointer`}
+              onClick={() => router.push("/")}
             >
               藤原の游戏小站
             </div>
