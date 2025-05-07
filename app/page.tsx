@@ -257,7 +257,7 @@ export default function Home() {
             >
               藤原の游戏小站
             </div>
-            <div className="text-white/50 text-sm">© 2023 Epic Gaming. 保留所有权利。</div>
+            <div className="text-white/50 text-sm">© 2025 TENGYUAN.保留所有权利。</div>
           </div>
         </div>
       </footer>

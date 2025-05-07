@@ -21,8 +21,8 @@ const categories = [
   { id: "racing", name: "竞速" },
   { id: "shooter", name: "射击" },
   { id: "puzzle", name: "解谜" },
-  { id: "indie", name: "独立" },
-  { id: "mmo", name: "多人在线" },
+  { id: "indie", name: "回合" },
+  { id: "mmo", name: "卡牌" },
 ]
 
 // 获取每个分类的游戏数量
