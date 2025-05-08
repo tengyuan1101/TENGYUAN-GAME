@@ -28,6 +28,7 @@ import {
 import { useRouter } from "next/navigation"
 import { ContactSupport } from "../components/contact-support"
 import { Footer } from "../components/footer"
+import { Logo } from "@/components/logo"
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>(allGames)
@@ -53,53 +54,59 @@ export default function Home() {
   })
 
   useEffect(() => {
-    const storedSettings = localStorage.getItem("siteSettings")
-    if (storedSettings) {
-      setSiteSettings(JSON.parse(storedSettings))
+    if (typeof window !== "undefined") {
+      const storedSettings = localStorage.getItem("siteSettings")
+      if (storedSettings) {
+        setSiteSettings(JSON.parse(storedSettings))
+      }
     }
   }, [])
 
   // 检查登录状态
   useEffect(() => {
-    const loggedIn = localStorage.getItem("userLoggedIn") === "true"
-    setIsLoggedIn(loggedIn)
+    if (typeof window !== "undefined") {
+      const loggedIn = localStorage.getItem("userLoggedIn") === "true"
+      setIsLoggedIn(loggedIn)
 
-    if (loggedIn) {
-      const user = JSON.parse(localStorage.getItem("currentUser") || "{}")
-      setCurrentUser(user)
+      if (loggedIn) {
+        const user = JSON.parse(localStorage.getItem("currentUser") || "{}")
+        setCurrentUser(user)
 
-      // 如果用户已登录，使用用户的收藏列表
-      if (user && user.favorites) {
-        setFavoriteGames(user.favorites)
-      }
-    } else {
-      // 如果未登录，使用本地存储的收藏列表
-      const savedFavorites = localStorage.getItem("favoriteGames")
-      if (savedFavorites) {
-        setFavoriteGames(JSON.parse(savedFavorites))
+        // 如果用户已登录，使用用户的收藏列表
+        if (user && user.favorites) {
+          setFavoriteGames(user.favorites)
+        }
+      } else {
+        // 如果未登录，使用本地存储的收藏列表
+        const savedFavorites = localStorage.getItem("favoriteGames")
+        if (savedFavorites) {
+          setFavoriteGames(JSON.parse(savedFavorites))
+        }
       }
     }
   }, [])
 
   // 保存收藏的游戏
   useEffect(() => {
-    if (isLoggedIn && currentUser) {
-      // 如果用户已登录，更新用户的收藏列表
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const updatedUsers = users.map((user: any) => {
-        if (user.id === currentUser.id) {
-          return { ...user, favorites: favoriteGames }
-        }
-        return user
-      })
-      localStorage.setItem("users", JSON.stringify(updatedUsers))
+    if (typeof window !== "undefined") {
+      if (isLoggedIn && currentUser) {
+        // 如果用户已登录，更新用户的收藏列表
+        const users = JSON.parse(localStorage.getItem("users") || "[]")
+        const updatedUsers = users.map((user: any) => {
+          if (user.id === currentUser.id) {
+            return { ...user, favorites: favoriteGames }
+          }
+          return user
+        })
+        localStorage.setItem("users", JSON.stringify(updatedUsers))
 
-      // 更新当前用户信息
-      setCurrentUser({ ...currentUser, favorites: favoriteGames })
-      localStorage.setItem("currentUser", JSON.stringify({ ...currentUser, favorites: favoriteGames }))
-    } else {
-      // 如果未登录，保存到本地存储
-      localStorage.setItem("favoriteGames", JSON.stringify(favoriteGames))
+        // 更新当前用户信息
+        setCurrentUser({ ...currentUser, favorites: favoriteGames })
+        localStorage.setItem("currentUser", JSON.stringify({ ...currentUser, favorites: favoriteGames }))
+      } else {
+        // 如果未登录，保存到本地存储
+        localStorage.setItem("favoriteGames", JSON.stringify(favoriteGames))
+      }
     }
   }, [favoriteGames, isLoggedIn, currentUser])
 
@@ -147,25 +154,27 @@ export default function Home() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("userLoggedIn")
-    localStorage.removeItem("currentUser")
-    setIsLoggedIn(false)
-    setCurrentUser(null)
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("userLoggedIn")
+      localStorage.removeItem("currentUser")
+      setIsLoggedIn(false)
+      setCurrentUser(null)
 
-    // 记录登出日志
-    const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
-    logs.push({
-      action: "用户登出",
-      username: currentUser?.username || "未知用户",
-      timestamp: new Date().toISOString(),
-      details: "用户登出",
-      ip: "127.0.0.1",
-      userAgent: navigator.userAgent,
-    })
-    localStorage.setItem("adminLogs", JSON.stringify(logs))
+      // 记录登出日志
+      const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+      logs.push({
+        action: "用户登出",
+        username: currentUser?.username || "未知用户",
+        timestamp: new Date().toISOString(),
+        details: "用户登出",
+        ip: "127.0.0.1",
+        userAgent: navigator.userAgent,
+      })
+      localStorage.setItem("adminLogs", JSON.stringify(logs))
 
-    // 重新加载页面以刷新状态
-    window.location.reload()
+      // 重新加载页面以刷新状态
+      window.location.reload()
+    }
   }
 
   return (
@@ -176,11 +185,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
-            <h1
-              className={`${ppEditorialNewUltralightItalic.className} text-2xl md:text-3xl font-light italic text-[#ff6b4a]/90 tracking-tighter`}
-            >
-              {siteSettings.siteName}
-            </h1>
+            <Logo />
           </div>
 
           <div className="flex items-center space-x-2">
@@ -190,7 +195,7 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowSearch(!showSearch)}
-                  className="text-white/70 hover:text-white"
+                  className="text-white/70 hover:text-white dark:text-white/70 dark:hover:text-white"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
@@ -198,7 +203,7 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowFavorites(!showFavorites)}
-                  className={`${showFavorites ? "text-[#ff6b4a]" : "text-white/70 hover:text-white"}`}
+                  className={`${showFavorites ? "text-[#ff6b4a]" : "text-white/70 hover:text-white dark:text-white/70 dark:hover:text-white"}`}
                 >
                   <Heart className="h-5 w-5" />
                 </Button>
@@ -211,7 +216,7 @@ export default function Home() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFavorites(!showFavorites)}
-                  className={`ml-2 ${showFavorites ? "bg-[#ff6b4a]/20 text-[#ff6b4a] border-[#ff6b4a]/30" : "text-white/70"}`}
+                  className={`ml-2 ${showFavorites ? "bg-[#ff6b4a]/20 text-[#ff6b4a] border-[#ff6b4a]/30" : "text-white/70 dark:text-white/70"}`}
                 >
                   <Heart className={`h-4 w-4 mr-2 ${showFavorites ? "fill-[#ff6b4a]" : ""}`} />
                   {showFavorites ? "已收藏" : "收藏"}
@@ -227,17 +232,23 @@ export default function Home() {
                     {currentUser?.username?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-black/90 border-white/10 text-white">
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-black/90 border-white/10 text-white dark:bg-white/90 dark:border-black/10 dark:text-black"
+                >
                   <div className="px-2 py-1.5 text-sm font-medium">{currentUser?.username}</div>
-                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuSeparator className="bg-white/10 dark:bg-black/10" />
                   <DropdownMenuItem
-                    className="hover:bg-white/10 cursor-pointer"
+                    className="hover:bg-white/10 cursor-pointer dark:hover:bg-black/10"
                     onClick={() => router.push("/profile")}
                   >
                     <User className="mr-2 h-4 w-4" />
                     <span>个人中心</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:bg-white/10 cursor-pointer" onClick={handleLogout}>
+                  <DropdownMenuItem
+                    className="hover:bg-white/10 cursor-pointer dark:hover:bg-black/10"
+                    onClick={handleLogout}
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>退出登录</span>
                   </DropdownMenuItem>
@@ -258,7 +269,7 @@ export default function Home() {
 
         {/* 移动端搜索框 */}
         {isMobile && showSearch && (
-          <div className="px-4 py-2 bg-black/40">
+          <div className="px-4 py-2 bg-black/40 dark:bg-white/10">
             <GameSearch searchQuery={searchQuery} setSearchQuery={setSearchQuery} fullWidth />
           </div>
         )}
@@ -284,7 +295,7 @@ export default function Home() {
               variant="ghost"
               size="icon"
               onClick={closeGameDetails}
-              className="absolute top-0 right-0 z-10 text-white/70 hover:text-white"
+              className="absolute top-0 right-0 z-10 text-white/70 hover:text-white dark:text-white/70 dark:hover:text-white"
             >
               <X className="h-6 w-6" />
             </Button>
@@ -298,7 +309,7 @@ export default function Home() {
           <>
             {/* 主要内容区域 */}
             <Tabs defaultValue="all" className="w-full" value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="mb-6 bg-black/20 border border-white/10">
+              <TabsList className="mb-6 bg-black/20 border border-white/10 dark:bg-white/20 dark:border-black/10">
                 <TabsTrigger
                   value="all"
                   className="data-[state=active]:bg-[#ff6b4a]/20 data-[state=active]:text-[#ff6b4a]"

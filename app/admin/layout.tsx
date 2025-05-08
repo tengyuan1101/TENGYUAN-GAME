@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { ppEditorialNewUltralightItalic } from "../fonts"
 import { Button } from "@/components/ui/button"
 import {
   Home,
@@ -18,7 +17,10 @@ import {
   X,
   FileText,
   Lock,
+  FolderIcon,
 } from "lucide-react"
+import { Logo } from "@/components/logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function AdminLayout({
   children,
@@ -85,20 +87,21 @@ export default function AdminLayout({
     { icon: <GamepadIcon size={20} />, label: "游戏管理", path: "/admin/games" },
     { icon: <MessageSquare size={20} />, label: "评论管理", path: "/admin/comments" },
     { icon: <Users size={20} />, label: "用户管理", path: "/admin/users" },
+    { icon: <FolderIcon size={20} />, label: "分类管理", path: "/admin/categories" },
     { icon: <BarChart size={20} />, label: "数据统计", path: "/admin/statistics" },
     { icon: <FileText size={20} />, label: "系统日志", path: "/admin/logs" },
     { icon: <Settings size={20} />, label: "系统设置", path: "/admin/settings" },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a14] to-[#141428] text-white flex">
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a14] to-[#141428] text-white dark:text-black flex">
       {/* 移动端菜单按钮 */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="bg-black/30 text-white hover:bg-black/50"
+          className="bg-black/30 text-white hover:bg-black/50 dark:bg-white/30 dark:text-black dark:hover:bg-white/50"
         >
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </Button>
@@ -106,17 +109,13 @@ export default function AdminLayout({
 
       {/* 侧边栏 */}
       <div
-        className={`fixed md:static top-0 left-0 h-full w-64 bg-black/50 backdrop-blur-md border-r border-white/10 transition-transform z-40 ${
+        className={`fixed md:static top-0 left-0 h-full w-64 bg-black/50 backdrop-blur-md border-r border-white/10 transition-transform z-40 dark:bg-white/50 dark:border-black/10 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <div className="p-4 border-b border-white/10">
-          <h1
-            className={`${ppEditorialNewUltralightItalic.className} text-xl font-light italic text-[#ff6b4a]/90 tracking-tighter`}
-          >
-            藤原の游戏小站
-          </h1>
-          <p className="text-sm text-white/50 mt-1">管理后台</p>
+        <div className="p-4 border-b border-white/10 dark:border-black/10">
+          <Logo size="sm" />
+          <p className="text-sm text-white/50 dark:text-black/50 mt-1">管理后台</p>
         </div>
 
         <div className="p-4">
@@ -126,7 +125,10 @@ export default function AdminLayout({
             </div>
             <div>
               <p className="text-sm font-medium">{username}</p>
-              <p className="text-xs text-white/50">管理员</p>
+              <p className="text-xs text-white/50 dark:text-black/50">管理员</p>
+            </div>
+            <div className="ml-auto">
+              <ThemeToggle />
             </div>
           </div>
 
@@ -138,7 +140,7 @@ export default function AdminLayout({
                 className={`w-full justify-start ${
                   pathname === item.path
                     ? "bg-[#ff6b4a]/10 text-[#ff6b4a] hover:bg-[#ff6b4a]/20"
-                    : "text-white/70 hover:text-white hover:bg-white/5"
+                    : "text-white/70 hover:text-white hover:bg-white/5 dark:text-black/70 dark:hover:text-black dark:hover:bg-black/5"
                 }`}
                 onClick={() => {
                   router.push(item.path)
@@ -152,7 +154,7 @@ export default function AdminLayout({
 
             <Button
               variant="ghost"
-              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/5"
+              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/5 mt-4 dark:text-black/70 dark:hover:text-black dark:hover:bg-black/5"
               onClick={() => {
                 router.push("/admin/reset-password")
                 setIsSidebarOpen(false)
@@ -164,7 +166,7 @@ export default function AdminLayout({
 
             <Button
               variant="ghost"
-              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/5 mt-4"
+              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/5 mt-4 dark:text-black/70 dark:hover:text-black dark:hover:bg-black/5"
               onClick={handleLogout}
             >
               <LogOut size={20} />
