@@ -1,6 +1,7 @@
 import "./globals.css"
 import { ppEditorialNewUltralightItalic, inter } from "./fonts"
 import { ThemeProvider } from "@/components/theme-provider"
+import { SiteDataProvider } from "@/context/SiteDataContext"
 import type React from "react"
 import type { Metadata } from "next"
 
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="zh" suppressHydrationWarning className={`${ppEditorialNewUltralightItalic.variable} ${inter.variable}`}>
       <body className={inter.className}>
         <ThemeProvider defaultTheme="dark" storageKey="theme">
-          <div className="page-transition">{children}</div>
+          <SiteDataProvider>
+            <div className="page-transition">{children}</div>
+          </SiteDataProvider>
         </ThemeProvider>
       </body>
     </html>

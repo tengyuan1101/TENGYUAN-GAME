@@ -11,7 +11,6 @@ import NewReleases from "../components/NewReleases"
 import TopGames from "../components/TopGames"
 import { useMediaQuery } from "../hooks/use-media-query"
 import type { Game } from "../types/game"
-import { allGames } from "../data/games"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, Search, X, User, LogOut } from "lucide-react"
@@ -29,10 +28,12 @@ import { useRouter } from "next/navigation"
 import { ContactSupport } from "../components/contact-support"
 import { Footer } from "../components/footer"
 import { Logo } from "@/components/logo"
+import { useSiteData } from "@/context/SiteDataContext"
 
 export default function Home() {
-  const [games, setGames] = useState<Game[]>(allGames)
-  const [filteredGames, setFilteredGames] = useState<Game[]>(allGames)
+  const { games: contextGames, settings } = useSiteData()
+  const [games, setGames] = useState<Game[]>([])
+  const [filteredGames, setFilteredGames] = useState<Game[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [selectedGame, setSelectedGame] = useState<Game | null>(null)
@@ -46,21 +47,13 @@ export default function Home() {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const router = useRouter()
 
-  // 加载网站设置
-  const [siteSettings, setSiteSettings] = useState<any>({
-    siteName: "藤原の游戏小站",
-    footerText: "© 2023 藤原の游戏小站. 保留所有权利。",
-    icp: "京ICP备XXXXXXXX号",
-  })
-
+  // 加载游戏数据
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedSettings = localStorage.getItem("siteSettings")
-      if (storedSettings) {
-        setSiteSettings(JSON.parse(storedSettings))
-      }
+    if (contextGames.length > 0) {
+      setGames(contextGames)
+      setFilteredGames(contextGames)
     }
-  }, [])
+  }, [contextGames])
 
   // 检查登录状态
   useEffect(() => {
@@ -112,7 +105,7 @@ export default function Home() {
 
   // 过滤游戏
   useEffect(() => {
-    let result = [...allGames]
+    let result = [...games]
 
     // 分类过滤
     if (selectedCategory !== "all") {
@@ -133,7 +126,7 @@ export default function Home() {
     }
 
     setFilteredGames(result)
-  }, [selectedCategory, searchQuery, showFavorites, favoriteGames])
+  }, [selectedCategory, searchQuery, showFavorites, favoriteGames, games])
 
   const toggleFavorite = (gameId: number) => {
     setFavoriteGames((prev) => {
@@ -176,6 +169,22 @@ export default function Home() {
       window.location.reload()
     }
   }
+
+  // 检查当前网站是否处于维护模式
+  useEffect(() => {
+    if (settings?.maintenanceMode && typeof window !== "undefined") {
+      const isAdmin = localStorage.getItem("adminLoggedIn") === "true"
+      if (!isAdmin) {
+        // 如果不是管理员用户，显示维护页面
+        document.body.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(to bottom, #0a0a14, #141428); color: white; flex-direction: column; padding: 20px; text-align: center;">
+            <h1 style="font-size: 2rem; margin-bottom: 1rem;">网站维护中</h1>
+            <p style="max-width: 500px; line-height: 1.6;">${settings.maintenanceMessage || "我们正在进行网站维护，请稍后再试。"}</p>
+          </div>
+        `
+      }
+    }
+  }, [settings])
 
   return (
     <div

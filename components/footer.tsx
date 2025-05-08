@@ -2,22 +2,19 @@
 
 import { useEffect, useState } from "react"
 import { Logo } from "./logo"
+import { useSiteData } from "@/context/SiteDataContext"
 
 export function Footer() {
-  const [siteSettings, setSiteSettings] = useState<any>({
-    siteName: "藤原の游戏小站",
-    footerText: "© 2023 藤原の游戏小站. 保留所有权利。",
-    icp: "京ICP备XXXXXXXX号",
-  })
+  const { settings } = useSiteData()
+  const [footerText, setFooterText] = useState("© 2023 藤原の游戏小站. 保留所有权利。")
+  const [icp, setIcp] = useState("京ICP备XXXXXXXX号")
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedSettings = localStorage.getItem("siteSettings")
-      if (storedSettings) {
-        setSiteSettings(JSON.parse(storedSettings))
-      }
+    if (settings) {
+      setFooterText(settings.footerText)
+      setIcp(settings.icp)
     }
-  }, [])
+  }, [settings])
 
   return (
     <footer className="bg-black/30 border-t border-white/10 py-6 mt-10 dark:bg-white/10 dark:border-black/10">
@@ -39,8 +36,8 @@ export function Footer() {
             </a>
           </div>
         </div>
-        <div className="mt-4 text-center text-white/30 dark:text-black/30 text-xs">{siteSettings.icp}</div>
-        <div className="mt-2 text-center text-white/50 dark:text-black/50 text-sm">{siteSettings.footerText}</div>
+        <div className="mt-4 text-center text-white/30 dark:text-black/30 text-xs">{icp}</div>
+        <div className="mt-2 text-center text-white/50 dark:text-black/50 text-sm">{footerText}</div>
       </div>
     </footer>
   )

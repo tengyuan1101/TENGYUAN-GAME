@@ -1,5 +1,9 @@
+"use client"
+
 import { ppEditorialNewUltralightItalic } from "@/app/fonts"
 import { GamepadIcon } from "lucide-react"
+import { useSiteData } from "@/context/SiteDataContext"
+import { useEffect, useState } from "react"
 
 interface LogoProps {
   size?: "sm" | "md" | "lg"
@@ -8,6 +12,15 @@ interface LogoProps {
 }
 
 export function Logo({ size = "md", showIcon = true, className = "" }: LogoProps) {
+  const { settings } = useSiteData()
+  const [siteName, setSiteName] = useState("藤原の游戏小站")
+
+  useEffect(() => {
+    if (settings?.siteName) {
+      setSiteName(settings.siteName)
+    }
+  }, [settings])
+
   const sizeClasses = {
     sm: "text-xl",
     md: "text-2xl md:text-3xl",
@@ -27,7 +40,7 @@ export function Logo({ size = "md", showIcon = true, className = "" }: LogoProps
       <h1
         className={`${ppEditorialNewUltralightItalic.className} ${sizeClasses[size]} font-light italic text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b4a] to-[#ff9a8b] tracking-tighter`}
       >
-        藤原の游戏小站
+        {siteName}
       </h1>
     </div>
   )

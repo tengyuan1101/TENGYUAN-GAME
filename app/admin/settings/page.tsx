@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Save, RefreshCw } from "lucide-react"
+import { Save, RefreshCw, Eye } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface SiteSettings {
   siteName: string
@@ -43,6 +44,7 @@ export default function SettingsPage() {
   const [success, setSuccess] = useState("")
   const [error, setError] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     // 从localStorage加载设置
@@ -73,12 +75,14 @@ export default function SettingsPage() {
       })
       localStorage.setItem("adminLogs", JSON.stringify(logs))
 
-      setSuccess("设置已成功保存！")
+      setSuccess("设置已成功保存！页面将自动刷新以应用更改。")
 
       // 模拟API调用延迟
       setTimeout(() => {
         setIsSaving(false)
-      }, 500)
+        // 刷新页面以应用新设置
+        window.location.reload()
+      }, 1500)
     } catch (err) {
       setError("保存设置时出错")
       setIsSaving(false)
@@ -105,11 +109,22 @@ export default function SettingsPage() {
     setSuccess("设置已重置为默认值")
   }
 
+  const handlePreviewSite = () => {
+    window.open("/", "_blank")
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">系统设置</h1>
         <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={handlePreviewSite}
+            className="border-white/10 text-white/70 hover:text-white"
+          >
+            <Eye className="h-4 w-4 mr-2" /> 预览网站
+          </Button>
           <Button
             variant="outline"
             onClick={handleResetSettings}
@@ -182,6 +197,7 @@ export default function SettingsPage() {
                     onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
                     className="bg-white/5 border-white/10 text-white"
                   />
+                  <p className="text-xs text-white/50">这将显示在网站的标题、Logo和页脚中</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contactEmail" className="text-white/70">
