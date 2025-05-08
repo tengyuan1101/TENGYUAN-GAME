@@ -1,5 +1,6 @@
 import "./globals.css"
 import { ppEditorialNewUltralightItalic, inter } from "./fonts"
+import { ThemeProvider } from "@/components/theme-provider"
 import type React from "react"
 
 export const metadata = {
@@ -15,7 +16,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh" className={`${ppEditorialNewUltralightItalic.variable} ${inter.variable}`}>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ThemeProvider defaultTheme="dark">{children}</ThemeProvider>
+      </body>
     </html>
   )
 }

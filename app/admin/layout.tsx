@@ -6,7 +6,19 @@ import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { ppEditorialNewUltralightItalic } from "../fonts"
 import { Button } from "@/components/ui/button"
-import { Home, GamepadIcon, MessageSquare, Users, BarChart, Settings, LogOut, Menu, X, ImageIcon } from "lucide-react"
+import {
+  Home,
+  GamepadIcon,
+  MessageSquare,
+  Users,
+  BarChart,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  FileText,
+  Lock,
+} from "lucide-react"
 
 export default function AdminLayout({
   children,
@@ -30,7 +42,7 @@ export default function AdminLayout({
       setUsername(storedUsername)
 
       // 如果未登录且不在登录页面，重定向到登录页面
-      if (!loggedIn && pathname !== "/admin/login") {
+      if (!loggedIn && pathname !== "/admin/login" && pathname !== "/admin/reset-password") {
         router.push("/admin/login")
       }
     }
@@ -38,14 +50,28 @@ export default function AdminLayout({
 
   // 处理登出
   const handleLogout = () => {
+    // 记录登出日志
+    if (typeof window !== "undefined") {
+      const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+      logs.push({
+        action: "登出",
+        username: localStorage.getItem("adminUsername") || "未知用户",
+        timestamp: new Date().toISOString(),
+        details: "用户登出",
+        ip: "127.0.0.1",
+        userAgent: navigator.userAgent,
+      })
+      localStorage.setItem("adminLogs", JSON.stringify(logs))
+    }
+
     localStorage.removeItem("adminLoggedIn")
     localStorage.removeItem("adminUsername")
     setIsLoggedIn(false)
     router.push("/admin/login")
   }
 
-  // 如果在登录页面，只渲染子组件
-  if (pathname === "/admin/login") {
+  // 如果在登录页面或密码重置页面，只渲染子组件
+  if (pathname === "/admin/login" || pathname === "/admin/reset-password") {
     return <>{children}</>
   }
 
@@ -59,8 +85,8 @@ export default function AdminLayout({
     { icon: <GamepadIcon size={20} />, label: "游戏管理", path: "/admin/games" },
     { icon: <MessageSquare size={20} />, label: "评论管理", path: "/admin/comments" },
     { icon: <Users size={20} />, label: "用户管理", path: "/admin/users" },
-    { icon: <ImageIcon size={20} />, label: "轮播图管理", path: "/admin/carousel" },
     { icon: <BarChart size={20} />, label: "数据统计", path: "/admin/statistics" },
+    { icon: <FileText size={20} />, label: "系统日志", path: "/admin/logs" },
     { icon: <Settings size={20} />, label: "系统设置", path: "/admin/settings" },
   ]
 
@@ -123,6 +149,18 @@ export default function AdminLayout({
                 <span className="ml-2">{item.label}</span>
               </Button>
             ))}
+
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/5"
+              onClick={() => {
+                router.push("/admin/reset-password")
+                setIsSidebarOpen(false)
+              }}
+            >
+              <Lock size={20} />
+              <span className="ml-2">修改密码</span>
+            </Button>
 
             <Button
               variant="ghost"

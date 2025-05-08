@@ -17,6 +17,18 @@
   --background-end-rgb: 5, 5, 15;
 }
 
+.light {
+  --foreground-rgb: 20, 20, 20;
+  --background-start-rgb: 240, 240, 245;
+  --background-end-rgb: 230, 230, 240;
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 10, 10, 20;
+  --background-end-rgb: 5, 5, 15;
+}
+
 @layer base {
   body {
     color: rgb(var(--foreground-rgb));
@@ -50,4 +62,85 @@
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
+}
+
+/* 主题相关样式 */
+.light .bg-black\/20 {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.light .bg-black\/30 {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.light .bg-black\/40 {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.light .bg-black\/50 {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.light .bg-black\/90 {
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.light .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .text-white {
+  color: rgb(20, 20, 20);
+}
+
+.light .text-white\/70 {
+  color: rgba(20, 20, 20, 0.7);
+}
+
+.light .text-white\/50 {
+  color: rgba(20, 20, 20, 0.5);
+}
+
+.light .text-white\/30 {
+  color: rgba(20, 20, 20, 0.3);
+}
+
+.light .hover\:text-white:hover {
+  color: rgb(20, 20, 20);
+}
+
+.light .hover\:bg-white\/5:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.light .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.light .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .bg-gradient-to-b {
+  background: linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
+}
+
+.light .bg-gradient-to-t {
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9), transparent);
+}
+
+.light .from-black\/80 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.8);
+}
+
+.light .from-black\/90 {
+  --tw-gradient-from: rgba(255, 255, 255, 0.9);
+}
+
+.light .via-black\/40 {
+  --tw-gradient-via: rgba(255, 255, 255, 0.4);
 }

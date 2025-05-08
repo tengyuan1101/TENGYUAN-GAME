@@ -4,15 +4,17 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ppEditorialNewUltralightItalic } from "../../fonts"
+import { ppEditorialNewUltralightItalic } from "../fonts"
+import type { User } from "@/types/user"
 
-export default function AdminLogin() {
-  const [username, setUsername] = useState("")
+export default function Login() {
+  const [usernameOrEmail, setUsernameOrEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const router = useRouter()
@@ -20,52 +22,50 @@ export default function AdminLogin() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // 简单的验证
-    if (!username || !password) {
-      setError("请输入用户名和密码")
+    // 验证输入
+    if (!usernameOrEmail || !password) {
+      setError("请输入用户名/邮箱和密码")
       return
     }
 
-    // 检查凭据 - 在实际应用中，这应该是一个安全的API调用
-    const storedPassword = localStorage.getItem("adminPassword") || "tengyuan"
+    // 获取用户列表
+    const users = JSON.parse(localStorage.getItem("users") || "[]") as User[]
 
-    if (password === storedPassword) {
+    // 查找用户
+    const user = users.find(
+      (user) => (user.username === usernameOrEmail || user.email === usernameOrEmail) && user.password === password,
+    )
+
+    if (user) {
       // 记录登录日志
       const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
       logs.push({
-        action: "登录",
-        username: username,
+        action: "用户登录",
+        username: user.username,
         timestamp: new Date().toISOString(),
-        details: "成功登录",
-        ip: "127.0.0.1", // 在实际应用中，这应该从服务器获取
-        userAgent: navigator.userAgent,
-      })
-      localStorage.setItem("adminLogs", JSON.stringify(logs))
-
-      // 存储登录状态
-      localStorage.setItem("adminLoggedIn", "true")
-      localStorage.setItem("adminUsername", username)
-      setError("")
-
-      // 添加一个短暂的延迟，确保localStorage更新后再重定向
-      setTimeout(() => {
-        // 重定向到管理面板
-        router.push("/admin/dashboard")
-      }, 100)
-    } else {
-      // 记录失败的登录尝试
-      const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
-      logs.push({
-        action: "登录",
-        username: username,
-        timestamp: new Date().toISOString(),
-        details: "登录失败：密码错误",
+        details: "用户成功登录",
         ip: "127.0.0.1",
         userAgent: navigator.userAgent,
       })
       localStorage.setItem("adminLogs", JSON.stringify(logs))
 
-      setError("用户名或密码不正确")
+      // 存储登录状态
+      localStorage.setItem("userLoggedIn", "true")
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          favorites: user.favorites,
+        }),
+      )
+
+      // 重定向到首页
+      router.push("/")
+    } else {
+      setError("用户名/邮箱或密码不正确")
     }
   }
 
@@ -74,10 +74,9 @@ export default function AdminLogin() {
       <Card className="w-full max-w-md bg-black/40 border-white/10">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center text-white">
-            <span className={`${ppEditorialNewUltralightItalic.className} text-[#ff6b4a]`}>藤原の游戏小站</span>{" "}
-            管理后台
+            <span className={`${ppEditorialNewUltralightItalic.className} text-[#ff6b4a]`}>藤原の游戏小站</span> 登录
           </CardTitle>
-          <CardDescription className="text-center text-white/60">请输入您的管理员凭据登录</CardDescription>
+          <CardDescription className="text-center text-white/60">登录您的账号，继续游戏之旅</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -85,29 +84,35 @@ export default function AdminLogin() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
           <form onSubmit={handleLogin}>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="username" className="text-white/70">
-                  用户名
+                <Label htmlFor="usernameOrEmail" className="text-white/70">
+                  用户名或邮箱
                 </Label>
                 <Input
-                  id="username"
+                  id="usernameOrEmail"
                   type="text"
-                  placeholder="管理员用户名"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="输入用户名或邮箱"
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
                   className="bg-white/5 border-white/10 text-white"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-white/70">
-                  密码
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-white/70">
+                    密码
+                  </Label>
+                  <Button variant="link" asChild className="text-[#ff6b4a] p-0 h-auto">
+                    <Link href="/forgot-password">忘记密码？</Link>
+                  </Button>
+                </div>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="管理员密码"
+                  placeholder="输入密码"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/5 border-white/10 text-white"
@@ -120,7 +125,12 @@ export default function AdminLogin() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-white/50">默认密码: tengyuan</p>
+          <p className="text-sm text-white/50">
+            没有账号？
+            <Button variant="link" asChild className="text-[#ff6b4a] p-0 h-auto ml-1">
+              <Link href="/register">注册</Link>
+            </Button>
+          </p>
         </CardFooter>
       </Card>
     </div>

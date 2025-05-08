@@ -5,71 +5,39 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 
-interface CarouselItem {
-  id: number
-  title: string
-  description: string
-  imageUrl: string
-  link: string
-  active: boolean
-  order: number
-}
-
-const defaultBannerImages = [
+const bannerImages = [
   {
     id: 1,
+    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/1172470/header.jpg",
     title: "无畏契约",
     description: "5v5 角色战术射击游戏",
-    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/1172470/header.jpg",
     link: "#",
-    active: true,
-    order: 1,
   },
   {
     id: 2,
+    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/1245620/header.jpg",
     title: "艾尔登法环",
     description: "开放世界动作角色扮演游戏",
-    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/1245620/header.jpg",
     link: "#",
-    active: true,
-    order: 2,
   },
   {
     id: 3,
+    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/1091500/header.jpg",
     title: "赛博朋克2077",
     description: "开放世界动作冒险RPG游戏",
-    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/1091500/header.jpg",
     link: "#",
-    active: true,
-    order: 3,
   },
   {
     id: 4,
+    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/990080/header.jpg",
     title: "黑神话：悟空",
     description: "国产动作角色扮演游戏",
-    imageUrl: "https://cdn.akamai.steamstatic.com/steam/apps/990080/header.jpg",
     link: "#",
-    active: true,
-    order: 4,
   },
 ]
 
 export default function CarouselBanner() {
-  const [bannerImages, setBannerImages] = useState<CarouselItem[]>(defaultBannerImages)
   const [currentIndex, setCurrentIndex] = useState(0)
-
-  useEffect(() => {
-    // Load carousel items from localStorage
-    const storedItems = localStorage.getItem("carouselItems")
-    if (storedItems) {
-      const items = JSON.parse(storedItems) as CarouselItem[]
-      // Filter active items and sort by order
-      const activeItems = items.filter((item) => item.active).sort((a, b) => a.order - b.order)
-      if (activeItems.length > 0) {
-        setBannerImages(activeItems)
-      }
-    }
-  }, [])
 
   const nextSlide = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % bannerImages.length)
@@ -110,12 +78,7 @@ export default function CarouselBanner() {
             <div className="absolute bottom-0 left-0 p-8 w-full">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{bannerImages[currentIndex].title}</h2>
               <p className="text-white/70 text-lg mb-4">{bannerImages[currentIndex].description}</p>
-              <Button
-                className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90 text-white"
-                onClick={() => (window.location.href = bannerImages[currentIndex].link)}
-              >
-                了解更多
-              </Button>
+              <Button className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90 text-white">了解更多</Button>
             </div>
           </div>
         </motion.div>

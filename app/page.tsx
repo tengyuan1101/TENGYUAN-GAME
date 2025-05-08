@@ -14,8 +14,17 @@ import type { Game } from "../types/game"
 import { allGames } from "../data/games"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Heart, Search, X } from "lucide-react"
+import { Heart, Search, X, User, LogOut } from "lucide-react"
 import CarouselBanner from "../components/CarouselBanner"
+import { ThemeToggle } from "@/components/theme-toggle"
+import Link from "next/link"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 
 export default function Home() {
@@ -28,22 +37,69 @@ export default function Home() {
   const [showFavorites, setShowFavorites] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
   const [showSearch, setShowSearch] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   const isMobile = useMediaQuery("(max-width: 768px)")
   const router = useRouter()
 
-  // 加载收藏的游戏
+  // 加载网站设置
+  const [siteSettings, setSiteSettings] = useState<any>({
+    siteName: "藤原の游戏小站",
+    footerText: "© 2023 藤原の游戏小站. 保留所有权利。",
+    icp: "京ICP备XXXXXXXX号",
+  })
+
   useEffect(() => {
-    const savedFavorites = localStorage.getItem("favoriteGames")
-    if (savedFavorites) {
-      setFavoriteGames(JSON.parse(savedFavorites))
+    const storedSettings = localStorage.getItem("siteSettings")
+    if (storedSettings) {
+      setSiteSettings(JSON.parse(storedSettings))
+    }
+  }, [])
+
+  // 检查登录状态
+  useEffect(() => {
+    const loggedIn = localStorage.getItem("userLoggedIn") === "true"
+    setIsLoggedIn(loggedIn)
+
+    if (loggedIn) {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}")
+      setCurrentUser(user)
+
+      // 如果用户已登录，使用用户的收藏列表
+      if (user && user.favorites) {
+        setFavoriteGames(user.favorites)
+      }
+    } else {
+      // 如果未登录，使用本地存储的收藏列表
+      const savedFavorites = localStorage.getItem("favoriteGames")
+      if (savedFavorites) {
+        setFavoriteGames(JSON.parse(savedFavorites))
+      }
     }
   }, [])
 
   // 保存收藏的游戏
   useEffect(() => {
-    localStorage.setItem("favoriteGames", JSON.stringify(favoriteGames))
-  }, [favoriteGames])
+    if (isLoggedIn && currentUser) {
+      // 如果用户已登录，更新用户的收藏列表
+      const users = JSON.parse(localStorage.getItem("users") || "[]")
+      const updatedUsers = users.map((user: any) => {
+        if (user.id === currentUser.id) {
+          return { ...user, favorites: favoriteGames }
+        }
+        return user
+      })
+      localStorage.setItem("users", JSON.stringify(updatedUsers))
+
+      // 更新当前用户信息
+      setCurrentUser({ ...currentUser, favorites: favoriteGames })
+      localStorage.setItem("currentUser", JSON.stringify({ ...currentUser, favorites: favoriteGames }))
+    } else {
+      // 如果未登录，保存到本地存储
+      localStorage.setItem("favoriteGames", JSON.stringify(favoriteGames))
+    }
+  }, [favoriteGames, isLoggedIn, currentUser])
 
   // 过滤游戏
   useEffect(() => {
@@ -88,6 +144,28 @@ export default function Home() {
     setSelectedGame(null)
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem("userLoggedIn")
+    localStorage.removeItem("currentUser")
+    setIsLoggedIn(false)
+    setCurrentUser(null)
+
+    // 记录登出日志
+    const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+    logs.push({
+      action: "用户登出",
+      username: currentUser?.username || "未知用户",
+      timestamp: new Date().toISOString(),
+      details: "用户登出",
+      ip: "127.0.0.1",
+      userAgent: navigator.userAgent,
+    })
+    localStorage.setItem("adminLogs", JSON.stringify(logs))
+
+    // 重新加载页面以刷新状态
+    window.location.reload()
+  }
+
   return (
     <div
       className={`min-h-screen bg-gradient-to-b from-[#0a0a14] to-[#141428] ${ppEditorialNewUltralightItalic.variable} ${inter.variable}`}
@@ -97,10 +175,9 @@ export default function Home() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
             <h1
-              className={`${ppEditorialNewUltralightItalic.className} text-2xl md:text-3xl font-light italic text-[#ff6b4a]/90 tracking-tighter cursor-pointer`}
-              onClick={() => router.push("/")}
+              className={`${ppEditorialNewUltralightItalic.className} text-2xl md:text-3xl font-light italic text-[#ff6b4a]/90 tracking-tighter`}
             >
-              藤原の游戏小站
+              {siteSettings.siteName}
             </h1>
           </div>
 
@@ -123,6 +200,7 @@ export default function Home() {
                 >
                   <Heart className="h-5 w-5" />
                 </Button>
+                <ThemeToggle />
               </>
             ) : (
               <>
@@ -136,7 +214,42 @@ export default function Home() {
                   <Heart className={`h-4 w-4 mr-2 ${showFavorites ? "fill-[#ff6b4a]" : ""}`} />
                   {showFavorites ? "已收藏" : "收藏"}
                 </Button>
+                <ThemeToggle />
               </>
+            )}
+
+            {isLoggedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full bg-[#ff6b4a]/20 text-[#ff6b4a]">
+                    {currentUser?.username?.charAt(0).toUpperCase() || <User className="h-5 w-5" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-black/90 border-white/10 text-white">
+                  <div className="px-2 py-1.5 text-sm font-medium">{currentUser?.username}</div>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem
+                    className="hover:bg-white/10 cursor-pointer"
+                    onClick={() => router.push("/profile")}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>个人中心</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-white/10 cursor-pointer" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>退出登录</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="border-[#ff6b4a]/30 text-[#ff6b4a] hover:bg-[#ff6b4a]/10"
+              >
+                <Link href="/login">登录</Link>
+              </Button>
             )}
           </div>
         </div>
@@ -252,13 +365,13 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div
-              className={`${ppEditorialNewUltralightItalic.className} text-xl font-light italic text-[#ff6b4a]/90 tracking-tighter mb-4 md:mb-0 cursor-pointer`}
-              onClick={() => router.push("/")}
+              className={`${ppEditorialNewUltralightItalic.className} text-xl font-light italic text-[#ff6b4a]/90 tracking-tighter mb-4 md:mb-0`}
             >
-              藤原の游戏小站
+              {siteSettings.siteName}
             </div>
-            <div className="text-white/50 text-sm">© 2025 TENGYUAN.保留所有权利。</div>
+            <div className="text-white/50 text-sm">{siteSettings.footerText}</div>
           </div>
+          <div className="mt-4 text-center text-white/30 text-xs">{siteSettings.icp}</div>
         </div>
       </footer>
     </div>
