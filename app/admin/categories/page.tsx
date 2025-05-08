@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Search, Edit, Trash2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Plus, Search, Edit, Trash2, FolderIcon } from "lucide-react"
 import { Label } from "@/components/ui/label"
 
 interface GameCategory {
@@ -15,6 +15,7 @@ interface GameCategory {
   slug: string
   description: string
   count: number
+  color?: string
 }
 
 export default function CategoriesManagement() {
@@ -28,6 +29,7 @@ export default function CategoriesManagement() {
     name: "",
     slug: "",
     description: "",
+    color: "#ff6b4a",
   })
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export default function CategoriesManagement() {
           slug: "action",
           description: "动作类游戏",
           count: 5,
+          color: "#ff6b4a",
         },
         {
           id: "2",
@@ -51,6 +54,7 @@ export default function CategoriesManagement() {
           slug: "rpg",
           description: "角色扮演类游戏",
           count: 3,
+          color: "#3b82f6",
         },
         {
           id: "3",
@@ -58,6 +62,7 @@ export default function CategoriesManagement() {
           slug: "shooter",
           description: "射击类游戏",
           count: 4,
+          color: "#10b981",
         },
         {
           id: "4",
@@ -65,6 +70,7 @@ export default function CategoriesManagement() {
           slug: "strategy",
           description: "策略类游戏",
           count: 2,
+          color: "#f59e0b",
         },
         {
           id: "5",
@@ -72,6 +78,7 @@ export default function CategoriesManagement() {
           slug: "adventure",
           description: "冒险类游戏",
           count: 3,
+          color: "#8b5cf6",
         },
       ]
       setCategories(sampleCategories)
@@ -115,6 +122,7 @@ export default function CategoriesManagement() {
       name: "",
       slug: "",
       description: "",
+      color: "#ff6b4a",
     })
   }
 
@@ -182,7 +190,10 @@ export default function CategoriesManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">游戏分类管理</h1>
-        <Button onClick={() => setIsAddDialogOpen(true)} className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90">
+        <Button
+          onClick={() => setIsAddDialogOpen(true)}
+          className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90 transition-all duration-300 transform hover:translate-y-[-2px]"
+        >
           <Plus className="h-4 w-4 mr-2" /> 添加分类
         </Button>
       </div>
@@ -200,9 +211,15 @@ export default function CategoriesManagement() {
       </div>
 
       {/* 分类列表 */}
-      <Card className="bg-black/20 border-white/10">
+      <Card className="bg-black/20 border-white/10 shadow-xl transition-all duration-300 hover:shadow-[#ff6b4a]/10">
         <CardHeader className="pb-0">
-          <CardTitle>游戏分类</CardTitle>
+          <CardTitle className="text-xl font-semibold flex items-center">
+            <div className="mr-2 p-1.5 rounded-md bg-[#ff6b4a]/20 text-[#ff6b4a]">
+              <FolderIcon className="h-5 w-5" />
+            </div>
+            游戏分类
+          </CardTitle>
+          <CardDescription className="text-white/60">管理网站的游戏分类，用于对游戏进行分类和筛选</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -222,7 +239,15 @@ export default function CategoriesManagement() {
                   filteredCategories.map((category) => (
                     <TableRow key={category.id} className="border-white/5">
                       <TableCell>{category.id}</TableCell>
-                      <TableCell className="font-medium">{category.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <div
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: category.color || "#ff6b4a" }}
+                          />
+                          {category.name}
+                        </div>
+                      </TableCell>
                       <TableCell>{category.slug}</TableCell>
                       <TableCell className="max-w-[300px] truncate">{category.description}</TableCell>
                       <TableCell>{category.count}</TableCell>
@@ -315,6 +340,26 @@ export default function CategoriesManagement() {
                 className="bg-white/5 border-white/10 text-white"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="color" className="text-white/70">
+                分类颜色
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {["#ff6b4a", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#f43f5e"].map(
+                  (color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={`w-6 h-6 rounded-full ${
+                        newCategory.color === color ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""
+                      }`}
+                      style={{ backgroundColor: color }}
+                      onClick={() => setNewCategory({ ...newCategory, color })}
+                    />
+                  ),
+                )}
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -383,6 +428,26 @@ export default function CategoriesManagement() {
                   onChange={(e) => setCurrentCategory({ ...currentCategory, description: e.target.value })}
                   className="bg-white/5 border-white/10 text-white"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-color" className="text-white/70">
+                  分类颜色
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {["#ff6b4a", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#f43f5e"].map(
+                    (color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`w-6 h-6 rounded-full ${
+                          currentCategory?.color === color ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""
+                        }`}
+                        style={{ backgroundColor: color }}
+                        onClick={() => setCurrentCategory({ ...currentCategory!, color })}
+                      />
+                    ),
+                  )}
+                </div>
               </div>
             </div>
           )}

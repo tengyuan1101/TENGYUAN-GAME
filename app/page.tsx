@@ -26,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import { ContactSupport } from "../components/contact-support"
+import { Footer } from "../components/footer"
 
 export default function Home() {
   const [games, setGames] = useState<Game[]>(allGames)
@@ -360,20 +362,11 @@ export default function Home() {
         )}
       </main>
 
-      {/* 底部导航 */}
-      <footer className="bg-black/30 border-t border-white/10 py-6 mt-10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div
-              className={`${ppEditorialNewUltralightItalic.className} text-xl font-light italic text-[#ff6b4a]/90 tracking-tighter mb-4 md:mb-0`}
-            >
-              {siteSettings.siteName}
-            </div>
-            <div className="text-white/50 text-sm">{siteSettings.footerText}</div>
-          </div>
-          <div className="mt-4 text-center text-white/30 text-xs">{siteSettings.icp}</div>
-        </div>
-      </footer>
+      {/* 替换原有的footer元素 */}
+      <Footer />
+
+      {/* 在末尾添加联系客服按钮 */}
+      <ContactSupport />
     </div>
   )
 }

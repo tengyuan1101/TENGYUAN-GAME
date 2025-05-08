@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ppEditorialNewUltralightItalic } from "../fonts"
 import type { User } from "@/types/user"
 
+// 在文件顶部添加这个检查函数
+function isClient() {
+  return typeof window !== "undefined"
+}
+
 export default function Register() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
@@ -21,6 +26,7 @@ export default function Register() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const router = useRouter()
+  const [enableRegistration, setEnableRegistration] = useState(true)
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,45 +49,48 @@ export default function Register() {
       return
     }
 
-    // 检查用户名是否已存在
-    const users = JSON.parse(localStorage.getItem("users") || "[]") as User[]
-    if (users.some((user) => user.username === username)) {
-      setError("用户名已被使用")
-      return
+    // 确保在客户端环境
+    if (isClient()) {
+      // 检查用户名是否已存在
+      const users = JSON.parse(localStorage.getItem("users") || "[]") as User[]
+      if (users.some((user) => user.username === username)) {
+        setError("用户名已被使用")
+        return
+      }
+
+      // 检查邮箱是否已存在
+      if (users.some((user) => user.email === email)) {
+        setError("邮箱已被注册")
+        return
+      }
+
+      // 创建新用户
+      const newUser: User = {
+        id: Date.now(),
+        username,
+        email,
+        password, // 注意：实际应用中应该对密码进行加密
+        createdAt: new Date().toISOString(),
+        role: "user",
+        favorites: [],
+      }
+
+      // 保存用户
+      users.push(newUser)
+      localStorage.setItem("users", JSON.stringify(users))
+
+      // 记录注册日志
+      const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+      logs.push({
+        action: "用户注册",
+        username: username,
+        timestamp: new Date().toISOString(),
+        details: "新用户注册",
+        ip: "127.0.0.1",
+        userAgent: navigator.userAgent,
+      })
+      localStorage.setItem("adminLogs", JSON.stringify(logs))
     }
-
-    // 检查邮箱是否已存在
-    if (users.some((user) => user.email === email)) {
-      setError("邮箱已被注册")
-      return
-    }
-
-    // 创建新用户
-    const newUser: User = {
-      id: Date.now(),
-      username,
-      email,
-      password, // 注意：实际应用中应该对密码进行加密
-      createdAt: new Date().toISOString(),
-      role: "user",
-      favorites: [],
-    }
-
-    // 保存用户
-    users.push(newUser)
-    localStorage.setItem("users", JSON.stringify(users))
-
-    // 记录注册日志
-    const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
-    logs.push({
-      action: "用户注册",
-      username: username,
-      timestamp: new Date().toISOString(),
-      details: "新用户注册",
-      ip: "127.0.0.1",
-      userAgent: navigator.userAgent,
-    })
-    localStorage.setItem("adminLogs", JSON.stringify(logs))
 
     setSuccess("注册成功！正在跳转到登录页面...")
     setError("")
@@ -98,9 +107,13 @@ export default function Register() {
     }, 3000)
   }
 
-  // 检查网站设置中是否允许注册
-  const siteSettings = JSON.parse(localStorage.getItem("siteSettings") || "{}")
-  const enableRegistration = siteSettings.enableRegistration !== false // 默认为true
+  // 添加 useEffect 钩子来读取 localStorage
+  useEffect(() => {
+    if (isClient()) {
+      const siteSettings = JSON.parse(localStorage.getItem("siteSettings") || "{}")
+      setEnableRegistration(siteSettings.enableRegistration !== false) // 默认为true
+    }
+  }, [])
 
   if (!enableRegistration) {
     return (

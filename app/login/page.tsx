@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -13,30 +13,42 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ppEditorialNewUltralightItalic } from "../fonts"
 import type { User } from "@/types/user"
 
+// 在文件顶部添加这个检查函数
+function isClient() {
+  return typeof window !== "undefined"
+}
+
 export default function Login() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [rememberMe, setRememberMe] = useState(false)
+  const [success, setSuccess] = useState("")
   const router = useRouter()
+
+  // 修改所有直接访问 localStorage 的地方，确保在客户端环境中执行
+  // 例如，在 handleLogin 函数中：
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // 验证输入
     if (!usernameOrEmail || !password) {
       setError("请输入用户名/邮箱和密码")
       return
     }
 
-    // 获取用户列表
-    const users = JSON.parse(localStorage.getItem("users") || "[]") as User[]
+    // 确保在客户端环境
+    if (isClient()) {
+      const users = JSON.parse(localStorage.getItem("users") || "[]") as User[]
+      const user = users.find(
+        (user) => (user.username === usernameOrEmail || user.email === usernameOrEmail) && user.password === password,
+      )
 
-    // 查找用户
-    const user = users.find(
-      (user) => (user.username === usernameOrEmail || user.email === usernameOrEmail) && user.password === password,
-    )
+      if (!user) {
+        setError("用户名/邮箱或密码不正确")
+        return
+      }
 
-    if (user) {
       // 记录登录日志
       const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
       logs.push({
@@ -62,12 +74,44 @@ export default function Login() {
         }),
       )
 
-      // 重定向到首页
-      router.push("/")
-    } else {
-      setError("用户名/邮箱或密码不正确")
+      // 如果选择了"记住我"，设置持久登录
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true")
+        localStorage.setItem("rememberedUser", JSON.stringify({ username: usernameOrEmail, password }))
+      } else {
+        localStorage.removeItem("rememberMe")
+        localStorage.removeItem("rememberedUser")
+      }
+
+      setSuccess("登录成功！正在跳转...")
+      setError("")
+
+      // 清空表单
+      setUsernameOrEmail("")
+      setPassword("")
+
+      // 3秒后重定向到首页
+      setTimeout(() => {
+        router.push("/")
+      }, 1500)
     }
   }
+
+  // 同样，修改 useEffect 钩子中的 localStorage 访问
+  useEffect(() => {
+    if (isClient()) {
+      // 检查是否有记住的用户
+      const rememberMeFlag = localStorage.getItem("rememberMe")
+      if (rememberMeFlag === "true") {
+        const rememberedUser = JSON.parse(localStorage.getItem("rememberedUser") || "{}")
+        if (rememberedUser.username && rememberedUser.password) {
+          setUsernameOrEmail(rememberedUser.username)
+          setPassword(rememberedUser.password)
+          setRememberMe(true)
+        }
+      }
+    }
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0a0a14] to-[#141428] p-4">
@@ -82,6 +126,12 @@ export default function Login() {
           {error && (
             <Alert variant="destructive" className="mb-4 bg-red-900/20 border-red-900/50 text-red-300">
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {success && (
+            <Alert className="mb-4 bg-green-900/20 border-green-900/50 text-green-300">
+              <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
 
@@ -117,6 +167,21 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/5 border-white/10 text-white"
                 />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="remember"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="bg-white/5 border-white/10 text-white focus:ring-0 focus:ring-offset-0"
+                />
+                <Label
+                  htmlFor="remember"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-white/70"
+                >
+                  记住我
+                </Label>
               </div>
               <Button type="submit" className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90 text-white">
                 登录
