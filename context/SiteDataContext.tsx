@@ -113,25 +113,42 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
         console.error("Failed to parse categories:", e)
         setCategories([])
       }
+    } else {
+      // 如果没有存储的分类，从游戏数据中提取
+      if (games.length > 0) {
+        const allCategories = games.flatMap((game) => game.categories)
+        const uniqueCategories = Array.from(new Set(allCategories))
+
+        // 创建分类对象
+        const categoryObjects = uniqueCategories.map((name, index) => ({
+          id: (index + 1).toString(),
+          name,
+          slug: name.toLowerCase().replace(/\s+/g, "-"),
+          description: `${name}类游戏`,
+          count: games.filter((game) => game.categories.includes(name)).length,
+          color: getRandomColor(),
+        }))
+
+        setCategories(categoryObjects)
+        localStorage.setItem("gameCategories", JSON.stringify(categoryObjects))
+      }
     }
 
     setIsLoading(false)
+  }
+
+  // 生成随机颜色
+  function getRandomColor() {
+    const colors = ["#ff6b4a", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#6366f1"]
+    return colors[Math.floor(Math.random() * colors.length)]
   }
 
   useEffect(() => {
     refreshData()
 
     // 监听存储变化
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "siteSettings") {
-        refreshData()
-      }
-      if (e.key === "managedGames") {
-        refreshData()
-      }
-      if (e.key === "gameCategories") {
-        refreshData()
-      }
+    const handleStorageChange = () => {
+      refreshData()
     }
 
     window.addEventListener("storage", handleStorageChange)

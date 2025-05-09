@@ -10,6 +10,9 @@ type ThemeProviderProps = {
   children: React.ReactNode
   defaultTheme?: Theme
   storageKey?: string
+  attribute?: string
+  enableSystem?: boolean
+  disableTransitionOnChange?: boolean
 }
 
 type ThemeProviderState = {
@@ -28,6 +31,9 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "theme",
+  attribute = "class",
+  enableSystem = true,
+  disableTransitionOnChange = false,
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme)
@@ -38,12 +44,21 @@ export function ThemeProvider({
       const savedTheme = localStorage.getItem(storageKey) as Theme
       if (savedTheme) {
         setTheme(savedTheme)
+      } else if (enableSystem) {
+        setTheme("system")
       }
     }
-  }, [storageKey])
+  }, [storageKey, enableSystem])
 
   useEffect(() => {
     const root = window.document.documentElement
+
+    if (disableTransitionOnChange) {
+      root.classList.add("disable-transitions")
+      window.setTimeout(() => {
+        root.classList.remove("disable-transitions")
+      }, 0)
+    }
 
     root.classList.remove("light", "dark")
 
@@ -51,6 +66,7 @@ export function ThemeProvider({
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 
       root.classList.add(systemTheme)
+      root.style.colorScheme = systemTheme
 
       // 添加系统主题变化监听
       const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
@@ -58,14 +74,16 @@ export function ThemeProvider({
         const newTheme = mediaQuery.matches ? "dark" : "light"
         root.classList.remove("light", "dark")
         root.classList.add(newTheme)
+        root.style.colorScheme = newTheme
       }
 
       mediaQuery.addEventListener("change", handleChange)
       return () => mediaQuery.removeEventListener("change", handleChange)
+    } else {
+      root.classList.add(theme)
+      root.style.colorScheme = theme
     }
-
-    root.classList.add(theme)
-  }, [theme])
+  }, [theme, disableTransitionOnChange])
 
   const value = {
     theme,
