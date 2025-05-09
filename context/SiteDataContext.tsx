@@ -68,19 +68,34 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<GameCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // 修改refreshData函数，确保数据更新时正确触发重新渲染
   const refreshData = () => {
     setIsLoading(true)
 
     // 加载设置
     const storedSettings = localStorage.getItem("siteSettings")
     if (storedSettings) {
-      setSettings(JSON.parse(storedSettings))
+      try {
+        setSettings(JSON.parse(storedSettings))
+      } catch (e) {
+        console.error("Failed to parse site settings:", e)
+        setSettings(defaultSettings)
+      }
     }
 
     // 加载游戏
     const storedGames = localStorage.getItem("managedGames")
     if (storedGames) {
-      setGames(JSON.parse(storedGames))
+      try {
+        setGames(JSON.parse(storedGames))
+      } catch (e) {
+        console.error("Failed to parse games:", e)
+        // 如果解析失败，使用原始数据
+        import("@/data/games").then(({ allGames }) => {
+          setGames(allGames)
+          localStorage.setItem("managedGames", JSON.stringify(allGames))
+        })
+      }
     } else {
       // 如果没有存储的游戏，使用原始数据
       import("@/data/games").then(({ allGames }) => {
@@ -92,7 +107,12 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
     // 加载分类
     const storedCategories = localStorage.getItem("gameCategories")
     if (storedCategories) {
-      setCategories(JSON.parse(storedCategories))
+      try {
+        setCategories(JSON.parse(storedCategories))
+      } catch (e) {
+        console.error("Failed to parse categories:", e)
+        setCategories([])
+      }
     }
 
     setIsLoading(false)
@@ -118,28 +138,66 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("storage", handleStorageChange)
   }, [])
 
+  // 修改updateSettings函数，确保设置更新后立即生效
   const updateSettings = (newSettings: SiteSettings) => {
     setSettings(newSettings)
     localStorage.setItem("siteSettings", JSON.stringify(newSettings))
 
+    // 记录设置修改日志
+    const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+    logs.push({
+      action: "设置更新",
+      username: localStorage.getItem("adminUsername") || "未知用户",
+      timestamp: new Date().toISOString(),
+      details: "系统设置已更新",
+      ip: "127.0.0.1",
+      userAgent: navigator.userAgent,
+    })
+    localStorage.setItem("adminLogs", JSON.stringify(logs))
+
     // 触发存储事件，以便其他组件也能更新
-    window.dispatchEvent(new StorageEvent("storage", { key: "siteSettings" }))
+    window.dispatchEvent(new Event("storage"))
   }
 
+  // 同样修改updateGames和updateCategories函数
   const updateGames = (newGames: Game[]) => {
     setGames(newGames)
     localStorage.setItem("managedGames", JSON.stringify(newGames))
 
+    // 记录游戏更新日志
+    const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+    logs.push({
+      action: "游戏更新",
+      username: localStorage.getItem("adminUsername") || "未知用户",
+      timestamp: new Date().toISOString(),
+      details: "游戏数据已更新",
+      ip: "127.0.0.1",
+      userAgent: navigator.userAgent,
+    })
+    localStorage.setItem("adminLogs", JSON.stringify(logs))
+
     // 触发存储事件，以便其他组件也能更新
-    window.dispatchEvent(new StorageEvent("storage", { key: "managedGames" }))
+    window.dispatchEvent(new Event("storage"))
   }
 
   const updateCategories = (newCategories: GameCategory[]) => {
     setCategories(newCategories)
     localStorage.setItem("gameCategories", JSON.stringify(newCategories))
 
+    // 记录分类更新日志
+    const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+    logs.push({
+      action: "分类更新",
+      username: localStorage.getItem("adminUsername") || "未知用户",
+      timestamp: new Date().toISOString(),
+      details: "游戏分类已更新",
+      ip: "127.0.0.1",
+      userAgent: navigator.userAgent,
+    })
+    localStorage.setItem("adminLogs", JSON.stringify(logs))
+
     // 触发存储事件，以便其他组件也能更新
-    window.dispatchEvent(new StorageEvent("storage", { key: "gameCategories" }))
+    window.dispatchEvent(new Event("storage"))
   }
 
   return (

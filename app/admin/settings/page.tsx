@@ -54,6 +54,7 @@ export default function SettingsPage() {
     }
   }, [])
 
+  // 修改handleSaveSettings函数，确保设置正确保存并应用
   const handleSaveSettings = () => {
     setIsSaving(true)
     setSuccess("")
@@ -74,6 +75,9 @@ export default function SettingsPage() {
         userAgent: navigator.userAgent,
       })
       localStorage.setItem("adminLogs", JSON.stringify(logs))
+
+      // 触发存储事件，以便其他组件也能更新
+      window.dispatchEvent(new Event("storage"))
 
       setSuccess("设置已成功保存！页面将自动刷新以应用更改。")
 
@@ -113,6 +117,7 @@ export default function SettingsPage() {
     window.open("/", "_blank")
   }
 
+  // 美化设置卡片
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -121,37 +126,44 @@ export default function SettingsPage() {
           <Button
             variant="outline"
             onClick={handlePreviewSite}
-            className="border-white/10 text-white/70 hover:text-white"
+            className="border-white/10 text-white/70 hover:text-white dark:border-black/10 dark:text-black/70 dark:hover:text-black"
           >
             <Eye className="h-4 w-4 mr-2" /> 预览网站
           </Button>
           <Button
             variant="outline"
             onClick={handleResetSettings}
-            className="border-white/10 text-white/70 hover:text-white"
+            className="border-white/10 text-white/70 hover:text-white dark:border-black/10 dark:text-black/70 dark:hover:text-black"
           >
             <RefreshCw className="h-4 w-4 mr-2" /> 重置默认
           </Button>
-          <Button onClick={handleSaveSettings} disabled={isSaving} className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90">
+          <Button
+            onClick={handleSaveSettings}
+            disabled={isSaving}
+            className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90 text-white"
+          >
             <Save className="h-4 w-4 mr-2" /> {isSaving ? "保存中..." : "保存设置"}
           </Button>
         </div>
       </div>
 
       {success && (
-        <Alert className="bg-green-900/20 border-green-900/50 text-green-300">
+        <Alert className="bg-green-900/20 border-green-900/50 text-green-300 dark:bg-green-100/20 dark:border-green-100/50 dark:text-green-700">
           <AlertDescription>{success}</AlertDescription>
         </Alert>
       )}
 
       {error && (
-        <Alert variant="destructive" className="bg-red-900/20 border-red-900/50 text-red-300">
+        <Alert
+          variant="destructive"
+          className="bg-red-900/20 border-red-900/50 text-red-300 dark:bg-red-100/20 dark:border-red-100/50 dark:text-red-700"
+        >
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="bg-black/20 border border-white/10">
+        <TabsList className="bg-black/20 border border-white/10 dark:bg-white/20 dark:border-black/10">
           <TabsTrigger
             value="general"
             className="data-[state=active]:bg-[#ff6b4a]/20 data-[state=active]:text-[#ff6b4a]"

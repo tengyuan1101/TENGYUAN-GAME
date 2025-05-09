@@ -11,8 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { MessageSquare, Search, Clock, CheckCircle, XCircle, RefreshCw } from "lucide-react"
+import { MessageSquare, Search, Clock, CheckCircle, XCircle, RefreshCw, Send, User } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ContactRequest {
   id: string
@@ -22,11 +24,12 @@ interface ContactRequest {
   timestamp: string
   status: "pending" | "processing" | "resolved" | "closed"
   category?: string
-  response?: {
+  responses?: {
     message: string
     timestamp: string
     respondedBy: string
-  }
+    isAdmin: boolean
+  }[]
 }
 
 export default function CustomerServicePage() {
@@ -40,6 +43,7 @@ export default function CustomerServicePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [category, setCategory] = useState<string>("general")
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest")
+  const [isChatView, setIsChatView] = useState(false)
 
   useEffect(() => {
     // 加载客服请求数据
@@ -57,6 +61,7 @@ export default function CustomerServicePage() {
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
           status: "pending",
           category: "account",
+          responses: [],
         },
         {
           id: "2",
@@ -66,6 +71,20 @@ export default function CustomerServicePage() {
           timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
           status: "processing",
           category: "account",
+          responses: [
+            {
+              message: "您好，请问您是在哪个页面遇到了问题？",
+              timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+              respondedBy: "客服团队",
+              isAdmin: true,
+            },
+            {
+              message: "我在个人中心页面，点击编辑按钮后没有反应。",
+              timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+              respondedBy: "李四",
+              isAdmin: false,
+            },
+          ],
         },
         {
           id: "3",
@@ -75,11 +94,20 @@ export default function CustomerServicePage() {
           timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
           status: "resolved",
           category: "download",
-          response: {
-            message: "已经为您重新生成下载链接，请检查您的邮箱。",
-            timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-            respondedBy: "客服团队",
-          },
+          responses: [
+            {
+              message: "已经为您重新生成下载链接，请检查您的邮箱。",
+              timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+              respondedBy: "客服团队",
+              isAdmin: true,
+            },
+            {
+              message: "谢谢，我已经收到并成功下载了。",
+              timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
+              respondedBy: "王五",
+              isAdmin: false,
+            },
+          ],
         },
         {
           id: "4",
@@ -89,11 +117,14 @@ export default function CustomerServicePage() {
           timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
           status: "closed",
           category: "content",
-          response: {
-            message: "感谢您的反馈，我们已经更正了系统配置信息。",
-            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            respondedBy: "内容团队",
-          },
+          responses: [
+            {
+              message: "感谢您的反馈，我们已经更正了系统配置信息。",
+              timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+              respondedBy: "内容团队",
+              isAdmin: true,
+            },
+          ],
         },
         {
           id: "5",
@@ -103,6 +134,7 @@ export default function CustomerServicePage() {
           timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
           status: "pending",
           category: "suggestion",
+          responses: [],
         },
       ]
       setRequests(sampleRequests)
@@ -224,16 +256,20 @@ export default function CustomerServicePage() {
 
     // 模拟API调用
     setTimeout(() => {
+      const newResponse = {
+        message: response,
+        timestamp: new Date().toISOString(),
+        respondedBy: localStorage.getItem("adminUsername") || "管理员",
+        isAdmin: true,
+      }
+
       const updatedRequests = requests.map((request) => {
         if (request.id === selectedRequest.id) {
+          const currentResponses = request.responses || []
           return {
             ...request,
-            status: "resolved" as const,
-            response: {
-              message: response,
-              timestamp: new Date().toISOString(),
-              respondedBy: localStorage.getItem("adminUsername") || "管理员",
-            },
+            status: "processing" as const,
+            responses: [...currentResponses, newResponse],
           }
         }
         return request
@@ -256,7 +292,6 @@ export default function CustomerServicePage() {
 
       setIsSubmitting(false)
       setResponse("")
-      setIsRespondDialogOpen(false)
 
       // 更新选中的请求
       const updatedRequest = updatedRequests.find((r) => r.id === selectedRequest.id)
@@ -282,6 +317,57 @@ export default function CustomerServicePage() {
     }
   }
 
+  const handleUserResponse = () => {
+    if (!selectedRequest || !response.trim()) return
+
+    setIsSubmitting(true)
+
+    // 模拟API调用
+    setTimeout(() => {
+      const newResponse = {
+        message: response,
+        timestamp: new Date().toISOString(),
+        respondedBy: selectedRequest.name,
+        isAdmin: false,
+      }
+
+      const updatedRequests = requests.map((request) => {
+        if (request.id === selectedRequest.id) {
+          const currentResponses = request.responses || []
+          return {
+            ...request,
+            responses: [...currentResponses, newResponse],
+          }
+        }
+        return request
+      })
+
+      setRequests(updatedRequests)
+      localStorage.setItem("contactRequests", JSON.stringify(updatedRequests))
+
+      // 记录操作日志
+      const logs = JSON.parse(localStorage.getItem("adminLogs") || "[]")
+      logs.push({
+        action: "模拟用户回复",
+        username: localStorage.getItem("adminUsername") || "未知用户",
+        timestamp: new Date().toISOString(),
+        details: `模拟用户 ${selectedRequest.name} 的回复`,
+        ip: "127.0.0.1",
+        userAgent: navigator.userAgent,
+      })
+      localStorage.setItem("adminLogs", JSON.stringify(logs))
+
+      setIsSubmitting(false)
+      setResponse("")
+
+      // 更新选中的请求
+      const updatedRequest = updatedRequests.find((r) => r.id === selectedRequest.id)
+      if (updatedRequest) {
+        setSelectedRequest(updatedRequest)
+      }
+    }, 1000)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -293,7 +379,7 @@ export default function CustomerServicePage() {
 
       {/* 状态统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-black/20 border-white/10">
+        <Card className="bg-black/20 border-white/10 dark:bg-white/20 dark:border-black/10 admin-card">
           <CardHeader className="py-4">
             <CardTitle className="text-base font-medium flex items-center">
               <Clock className="h-4 w-4 mr-2 text-yellow-500" /> 待处理
@@ -303,7 +389,7 @@ export default function CustomerServicePage() {
             <div className="text-2xl font-bold">{requests.filter((r) => r.status === "pending").length}</div>
           </CardContent>
         </Card>
-        <Card className="bg-black/20 border-white/10">
+        <Card className="bg-black/20 border-white/10 dark:bg-white/20 dark:border-black/10 admin-card">
           <CardHeader className="py-4">
             <CardTitle className="text-base font-medium flex items-center">
               <MessageSquare className="h-4 w-4 mr-2 text-blue-500" /> 处理中
@@ -313,7 +399,7 @@ export default function CustomerServicePage() {
             <div className="text-2xl font-bold">{requests.filter((r) => r.status === "processing").length}</div>
           </CardContent>
         </Card>
-        <Card className="bg-black/20 border-white/10">
+        <Card className="bg-black/20 border-white/10 dark:bg-white/20 dark:border-black/10 admin-card">
           <CardHeader className="py-4">
             <CardTitle className="text-base font-medium flex items-center">
               <CheckCircle className="h-4 w-4 mr-2 text-green-500" /> 已解决
@@ -323,7 +409,7 @@ export default function CustomerServicePage() {
             <div className="text-2xl font-bold">{requests.filter((r) => r.status === "resolved").length}</div>
           </CardContent>
         </Card>
-        <Card className="bg-black/20 border-white/10">
+        <Card className="bg-black/20 border-white/10 dark:bg-white/20 dark:border-black/10 admin-card">
           <CardHeader className="py-4">
             <CardTitle className="text-base font-medium flex items-center">
               <XCircle className="h-4 w-4 mr-2 text-gray-500" /> 已关闭
@@ -338,21 +424,21 @@ export default function CustomerServicePage() {
       {/* 搜索栏和过滤器 */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50 dark:text-black/50" />
           <Input
             type="text"
             placeholder="搜索用户名、邮箱或内容..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white/5 border-white/10 text-white"
+            className="pl-10 bg-white/5 border-white/10 text-white dark:bg-black/5 dark:border-black/10 dark:text-black admin-input"
           />
         </div>
         <div className="flex gap-2">
           <Select value={sortOrder} onValueChange={(value: "newest" | "oldest") => setSortOrder(value)}>
-            <SelectTrigger className="w-[140px] bg-white/5 border-white/10 text-white">
+            <SelectTrigger className="w-[140px] bg-white/5 border-white/10 text-white dark:bg-black/5 dark:border-black/10 dark:text-black admin-input">
               <SelectValue placeholder="排序方式" />
             </SelectTrigger>
-            <SelectContent className="bg-black/90 border-white/10 text-white">
+            <SelectContent className="bg-black/90 border-white/10 text-white dark:bg-white/90 dark:border-black/10 dark:text-black">
               <SelectItem value="newest">最新优先</SelectItem>
               <SelectItem value="oldest">最早优先</SelectItem>
             </SelectContent>
@@ -362,7 +448,7 @@ export default function CustomerServicePage() {
 
       {/* 标签栏 */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-black/20 border border-white/10">
+        <TabsList className="bg-black/20 border border-white/10 dark:bg-white/20 dark:border-black/10">
           <TabsTrigger value="all" className="data-[state=active]:bg-[#ff6b4a]/20 data-[state=active]:text-[#ff6b4a]">
             全部
           </TabsTrigger>
@@ -394,34 +480,36 @@ export default function CustomerServicePage() {
       </Tabs>
 
       {/* 请求列表 */}
-      <div className="bg-black/20 border border-white/10 rounded-lg overflow-hidden">
+      <div className="bg-black/20 border border-white/10 rounded-lg overflow-hidden dark:bg-white/20 dark:border-black/10 admin-card">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 hover:bg-transparent">
-                <TableHead className="text-white/70">ID</TableHead>
-                <TableHead className="text-white/70">用户</TableHead>
-                <TableHead className="text-white/70">分类</TableHead>
-                <TableHead className="text-white/70">内容</TableHead>
-                <TableHead className="text-white/70">提交时间</TableHead>
-                <TableHead className="text-white/70">状态</TableHead>
-                <TableHead className="text-white/70 text-right">操作</TableHead>
+              <TableRow className="border-white/10 hover:bg-transparent dark:border-black/10">
+                <TableHead className="text-white/70 dark:text-black/70 admin-text">ID</TableHead>
+                <TableHead className="text-white/70 dark:text-black/70 admin-text">用户</TableHead>
+                <TableHead className="text-white/70 dark:text-black/70 admin-text">分类</TableHead>
+                <TableHead className="text-white/70 dark:text-black/70 admin-text">内容</TableHead>
+                <TableHead className="text-white/70 dark:text-black/70 admin-text">提交时间</TableHead>
+                <TableHead className="text-white/70 dark:text-black/70 admin-text">状态</TableHead>
+                <TableHead className="text-white/70 dark:text-black/70 admin-text text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRequests.length > 0 ? (
                 filteredRequests.map((request) => (
-                  <TableRow key={request.id} className="border-white/5">
+                  <TableRow key={request.id} className="border-white/5 dark:border-black/5">
                     <TableCell className="font-medium">{request.id}</TableCell>
                     <TableCell>
                       <div>
                         <div>{request.name}</div>
-                        <div className="text-xs text-white/50">{request.email}</div>
+                        <div className="text-xs text-white/50 dark:text-black/50">{request.email}</div>
                       </div>
                     </TableCell>
                     <TableCell>{getCategoryBadge(request.category)}</TableCell>
                     <TableCell className="max-w-[300px] truncate">{request.message}</TableCell>
-                    <TableCell className="text-white/70">{formatDate(request.timestamp)}</TableCell>
+                    <TableCell className="text-white/70 dark:text-black/70 admin-text">
+                      {formatDate(request.timestamp)}
+                    </TableCell>
                     <TableCell>{getStatusBadge(request.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
@@ -430,9 +518,22 @@ export default function CustomerServicePage() {
                           size="sm"
                           onClick={() => {
                             setSelectedRequest(request)
+                            setIsChatView(true)
                             setIsViewDialogOpen(true)
                           }}
-                          className="text-white/70 hover:text-white"
+                          className="text-white/70 hover:text-white dark:text-black/70 dark:hover:text-black"
+                        >
+                          聊天
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedRequest(request)
+                            setIsChatView(false)
+                            setIsViewDialogOpen(true)
+                          }}
+                          className="text-white/70 hover:text-white dark:text-black/70 dark:hover:text-black"
                         >
                           查看
                         </Button>
@@ -455,7 +556,7 @@ export default function CustomerServicePage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-white/50">
+                  <TableCell colSpan={7} className="text-center py-6 text-white/50 dark:text-black/50">
                     没有找到匹配的客服请求
                   </TableCell>
                 </TableRow>
@@ -467,83 +568,192 @@ export default function CustomerServicePage() {
 
       {/* 查看详情对话框 */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="bg-black/90 border-white/10 text-white max-w-3xl">
+        <DialogContent className="bg-black/90 border-white/10 text-white max-w-3xl dark:bg-white/90 dark:border-black/10 dark:text-black">
           <DialogHeader>
-            <DialogTitle>查看客服请求</DialogTitle>
+            <DialogTitle className="flex justify-between items-center">
+              <span>{isChatView ? "聊天记录" : "查看客服请求"}</span>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsChatView(!isChatView)}
+                  className="border-white/10 text-white/70 hover:text-white dark:border-black/10 dark:text-black/70 dark:hover:text-black"
+                >
+                  {isChatView ? "详情视图" : "聊天视图"}
+                </Button>
+              </div>
+            </DialogTitle>
           </DialogHeader>
           {selectedRequest && (
-            <div className="py-4 space-y-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium text-lg">{selectedRequest.name}</h3>
-                  <p className="text-sm text-white/50">{selectedRequest.email}</p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <div className="mb-1">{getStatusBadge(selectedRequest.status)}</div>
-                  <p className="text-sm text-white/50">{formatDate(selectedRequest.timestamp)}</p>
-                </div>
-              </div>
+            <>
+              {isChatView ? (
+                <div className="py-4 space-y-4">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center">
+                      <Avatar className="h-10 w-10 mr-2">
+                        <AvatarFallback className="bg-[#ff6b4a]/20 text-[#ff6b4a]">
+                          {selectedRequest.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{selectedRequest.name}</div>
+                        <div className="text-xs text-white/50 dark:text-black/50">{selectedRequest.email}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <div className="mb-1">{getStatusBadge(selectedRequest.status)}</div>
+                      <div className="text-xs text-white/50 dark:text-black/50">
+                        {getCategoryLabel(selectedRequest.category)}
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="col-span-1">
-                  <p className="text-sm text-white/70 mb-1">分类</p>
-                  <Select
-                    value={selectedRequest.category || "general"}
-                    onValueChange={(value) => handleCategoryChange(selectedRequest.id, value)}
-                  >
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 text-white">
-                      <SelectValue placeholder="选择分类" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/90 border-white/10 text-white">
-                      <SelectItem value="general">一般咨询</SelectItem>
-                      <SelectItem value="account">账号问题</SelectItem>
-                      <SelectItem value="download">下载问题</SelectItem>
-                      <SelectItem value="content">内容反馈</SelectItem>
-                      <SelectItem value="suggestion">功能建议</SelectItem>
-                      <SelectItem value="technical">技术支持</SelectItem>
-                      <SelectItem value="payment">支付问题</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-1">
-                  <p className="text-sm text-white/70 mb-1">状态</p>
-                  <Select
-                    value={selectedRequest.status}
-                    onValueChange={(value: "pending" | "processing" | "resolved" | "closed") =>
-                      handleUpdateStatus(selectedRequest.id, value)
-                    }
-                  >
-                    <SelectTrigger className="w-full bg-white/5 border-white/10 text-white">
-                      <SelectValue placeholder="更新状态" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/90 border-white/10 text-white">
-                      <SelectItem value="pending">待处理</SelectItem>
-                      <SelectItem value="processing">处理中</SelectItem>
-                      <SelectItem value="resolved">已解决</SelectItem>
-                      <SelectItem value="closed">已关闭</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                  <ScrollArea className="h-[400px] pr-4 customer-service-card">
+                    <div className="space-y-4">
+                      <div className="message-bubble user">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-medium">{selectedRequest.name}</span>
+                          <span className="text-xs text-white/50 dark:text-black/50">
+                            {formatDate(selectedRequest.timestamp)}
+                          </span>
+                        </div>
+                        <p>{selectedRequest.message}</p>
+                      </div>
 
-              <div>
-                <p className="text-sm text-white/70 mb-1">用户消息</p>
-                <div className="bg-white/5 p-4 rounded-md border border-white/10">{selectedRequest.message}</div>
-              </div>
+                      {selectedRequest.responses &&
+                        selectedRequest.responses.map((response, index) => (
+                          <div key={index} className={`message-bubble ${response.isAdmin ? "admin" : "user"}`}>
+                            <div className="flex justify-between items-start mb-1">
+                              <span className="font-medium">{response.respondedBy}</span>
+                              <span className="text-xs text-white/50 dark:text-black/50">
+                                {formatDate(response.timestamp)}
+                              </span>
+                            </div>
+                            <p>{response.message}</p>
+                          </div>
+                        ))}
+                    </div>
+                  </ScrollArea>
 
-              {selectedRequest.response && (
-                <div>
-                  <p className="text-sm text-white/70 mb-1">回复内容</p>
-                  <div className="bg-[#ff6b4a]/10 p-4 rounded-md border border-[#ff6b4a]/20">
-                    <div className="mb-2">{selectedRequest.response.message}</div>
-                    <div className="text-xs text-white/50 flex justify-between">
-                      <span>回复者: {selectedRequest.response.respondedBy}</span>
-                      <span>{formatDate(selectedRequest.response.timestamp)}</span>
+                  <div className="flex space-x-2 pt-4 border-t border-white/10 dark:border-black/10">
+                    <Textarea
+                      value={response}
+                      onChange={(e) => setResponse(e.target.value)}
+                      placeholder="输入回复内容..."
+                      className="flex-1 bg-white/5 border-white/10 text-white dark:bg-black/5 dark:border-black/10 dark:text-black admin-input"
+                    />
+                    <div className="flex flex-col space-y-2">
+                      <Button
+                        onClick={handleSendResponse}
+                        disabled={isSubmitting || !response.trim()}
+                        className="bg-[#ff6b4a] hover:bg-[#ff6b4a]/90"
+                      >
+                        <Send className="h-4 w-4 mr-2" /> 管理员回复
+                      </Button>
+                      <Button
+                        onClick={handleUserResponse}
+                        disabled={isSubmitting || !response.trim()}
+                        variant="outline"
+                        className="border-white/10 text-white/70 hover:text-white dark:border-black/10 dark:text-black/70 dark:hover:text-black"
+                      >
+                        <User className="h-4 w-4 mr-2" /> 模拟用户回复
+                      </Button>
                     </div>
                   </div>
                 </div>
+              ) : (
+                <div className="py-4 space-y-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-lg">{selectedRequest.name}</h3>
+                      <p className="text-sm text-white/50 dark:text-black/50">{selectedRequest.email}</p>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <div className="mb-1">{getStatusBadge(selectedRequest.status)}</div>
+                      <p className="text-sm text-white/50 dark:text-black/50">
+                        {formatDate(selectedRequest.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="col-span-1">
+                      <p className="text-sm text-white/70 dark:text-black/70 admin-text mb-1">分类</p>
+                      <Select
+                        value={selectedRequest.category || "general"}
+                        onValueChange={(value) => handleCategoryChange(selectedRequest.id, value)}
+                      >
+                        <SelectTrigger className="w-full bg-white/5 border-white/10 text-white dark:bg-black/5 dark:border-black/10 dark:text-black admin-input">
+                          <SelectValue placeholder="选择分类" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black/90 border-white/10 text-white dark:bg-white/90 dark:border-black/10 dark:text-black">
+                          <SelectItem value="general">一般咨询</SelectItem>
+                          <SelectItem value="account">账号问题</SelectItem>
+                          <SelectItem value="download">下载问题</SelectItem>
+                          <SelectItem value="content">内容反馈</SelectItem>
+                          <SelectItem value="suggestion">功能建议</SelectItem>
+                          <SelectItem value="technical">技术支持</SelectItem>
+                          <SelectItem value="payment">支付问题</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-1">
+                      <p className="text-sm text-white/70 dark:text-black/70 admin-text mb-1">状态</p>
+                      <Select
+                        value={selectedRequest.status}
+                        onValueChange={(value: "pending" | "processing" | "resolved" | "closed") =>
+                          handleUpdateStatus(selectedRequest.id, value)
+                        }
+                      >
+                        <SelectTrigger className="w-full bg-white/5 border-white/10 text-white dark:bg-black/5 dark:border-black/10 dark:text-black admin-input">
+                          <SelectValue placeholder="更新状态" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-black/90 border-white/10 text-white dark:bg-white/90 dark:border-black/10 dark:text-black">
+                          <SelectItem value="pending">待处理</SelectItem>
+                          <SelectItem value="processing">处理中</SelectItem>
+                          <SelectItem value="resolved">已解决</SelectItem>
+                          <SelectItem value="closed">已关闭</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-white/70 dark:text-black/70 admin-text mb-1">用户消息</p>
+                    <div className="bg-white/5 p-4 rounded-md border border-white/10 dark:bg-black/5 dark:border-black/10">
+                      {selectedRequest.message}
+                    </div>
+                  </div>
+
+                  {selectedRequest.responses && selectedRequest.responses.length > 0 && (
+                    <div>
+                      <p className="text-sm text-white/70 dark:text-black/70 admin-text mb-1">回复记录</p>
+                      <div className="space-y-4">
+                        {selectedRequest.responses.map((response, index) => (
+                          <div
+                            key={index}
+                            className={`p-4 rounded-md border ${
+                              response.isAdmin
+                                ? "bg-[#ff6b4a]/10 border-[#ff6b4a]/20"
+                                : "bg-white/5 border-white/10 dark:bg-black/5 dark:border-black/10"
+                            }`}
+                          >
+                            <div className="mb-2">{response.message}</div>
+                            <div className="text-xs text-white/50 dark:text-black/50 flex justify-between">
+                              <span>
+                                {response.isAdmin ? "回复者: " : "用户: "}
+                                {response.respondedBy}
+                              </span>
+                              <span>{formatDate(response.timestamp)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
           <DialogFooter className="flex justify-between">
             <div>
@@ -559,7 +769,11 @@ export default function CustomerServicePage() {
                 </Button>
               )}
             </div>
-            <Button onClick={() => setIsViewDialogOpen(false)} variant="outline" className="border-white/10">
+            <Button
+              onClick={() => setIsViewDialogOpen(false)}
+              variant="outline"
+              className="border-white/10 dark:border-black/10"
+            >
               关闭
             </Button>
           </DialogFooter>
@@ -568,32 +782,34 @@ export default function CustomerServicePage() {
 
       {/* 回复对话框 */}
       <Dialog open={isRespondDialogOpen} onOpenChange={setIsRespondDialogOpen}>
-        <DialogContent className="bg-black/90 border-white/10 text-white max-w-2xl">
+        <DialogContent className="bg-black/90 border-white/10 text-white max-w-2xl dark:bg-white/90 dark:border-black/10 dark:text-black">
           <DialogHeader>
             <DialogTitle>回复客服请求</DialogTitle>
           </DialogHeader>
           {selectedRequest && (
             <div className="py-4 space-y-4">
-              <div className="bg-white/5 p-3 rounded-md border border-white/10">
+              <div className="bg-white/5 p-3 rounded-md border border-white/10 dark:bg-black/5 dark:border-black/10">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="font-medium">{selectedRequest.name}</span>
-                    <span className="text-sm text-white/50 ml-2">{selectedRequest.email}</span>
+                    <span className="text-sm text-white/50 dark:text-black/50 ml-2">{selectedRequest.email}</span>
                   </div>
-                  <span className="text-sm text-white/50">{formatDate(selectedRequest.timestamp)}</span>
+                  <span className="text-sm text-white/50 dark:text-black/50">
+                    {formatDate(selectedRequest.timestamp)}
+                  </span>
                 </div>
                 <p>{selectedRequest.message}</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="response" className="text-white/70">
+                <Label htmlFor="response" className="text-white/70 dark:text-black/70 admin-text">
                   回复内容
                 </Label>
                 <Textarea
                   id="response"
                   value={response}
                   onChange={(e) => setResponse(e.target.value)}
-                  className="bg-white/5 border-white/10 text-white min-h-[150px]"
+                  className="bg-white/5 border-white/10 text-white min-h-[150px] dark:bg-black/5 dark:border-black/10 dark:text-black admin-input"
                   placeholder="在此输入回复内容..."
                 />
               </div>
@@ -609,7 +825,7 @@ export default function CustomerServicePage() {
                   }
                   setIsRespondDialogOpen(false)
                 }}
-                className="border-white/10 text-white/70 mr-2"
+                className="border-white/10 text-white/70 hover:text-white mr-2 dark:border-black/10 dark:text-black/70 dark:hover:text-black"
               >
                 标记为处理中
               </Button>
@@ -618,7 +834,7 @@ export default function CustomerServicePage() {
               <Button
                 variant="outline"
                 onClick={() => setIsRespondDialogOpen(false)}
-                className="border-white/10 text-white/70 mr-2"
+                className="border-white/10 text-white/70 hover:text-white mr-2 dark:border-black/10 dark:text-black/70 dark:hover:text-black"
               >
                 取消
               </Button>

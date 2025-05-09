@@ -18,6 +18,8 @@ import {
   FileText,
   Lock,
   FolderIcon,
+  Star,
+  MessageCircle,
 } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -85,10 +87,12 @@ export default function AdminLayout({
   const navItems = [
     { icon: <Home size={20} />, label: "控制面板", path: "/admin/dashboard" },
     { icon: <GamepadIcon size={20} />, label: "游戏管理", path: "/admin/games" },
+    { icon: <Star size={20} />, label: "推荐游戏", path: "/admin/featured-games" },
     { icon: <MessageSquare size={20} />, label: "评论管理", path: "/admin/comments" },
     { icon: <Users size={20} />, label: "用户管理", path: "/admin/users" },
     { icon: <FolderIcon size={20} />, label: "分类管理", path: "/admin/categories" },
     { icon: <BarChart size={20} />, label: "数据统计", path: "/admin/statistics" },
+    { icon: <MessageCircle size={20} />, label: "客服管理", path: "/admin/customer-service" },
     { icon: <FileText size={20} />, label: "系统日志", path: "/admin/logs" },
     { icon: <Settings size={20} />, label: "系统设置", path: "/admin/settings" },
   ]
