@@ -390,6 +390,49 @@
   background-color: rgba(0, 0, 0, 0.02);
 }
 
+/* 公告样式 */
+.announcement-badge {
+  position: relative;
+}
+
+.announcement-badge::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background-color: #ff6b4a;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.prose-invert {
+  color: white;
+}
+
+.prose-invert a {
+  color: #ff6b4a;
+}
+
+.prose-invert strong {
+  color: white;
+  font-weight: 600;
+}
+
+.prose-light {
+  color: black;
+}
+
+.prose-light a {
+  color: #ff6b4a;
+}
+
+.prose-light strong {
+  color: black;
+  font-weight: 600;
+}
+
 @keyframes float {
   0% {
     transform: translateY(0px);

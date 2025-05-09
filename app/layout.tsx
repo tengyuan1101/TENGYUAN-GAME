@@ -5,6 +5,7 @@ import "./globals.css"
 import "./custom-slider.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SiteDataProvider } from "@/context/SiteDataContext"
+import { AnnouncementProvider } from "@/context/AnnouncementContext"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
@@ -23,7 +24,11 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <body className={`${inter.variable} min-h-screen antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange={false}>
-          <SiteDataProvider>{children}</SiteDataProvider>
+          <SiteDataProvider>
+            <AnnouncementProvider>
+              <div className="page-transition">{children}</div>
+            </AnnouncementProvider>
+          </SiteDataProvider>
         </ThemeProvider>
       </body>
     </html>

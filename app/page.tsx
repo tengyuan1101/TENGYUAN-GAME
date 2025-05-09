@@ -29,6 +29,7 @@ import { ContactSupport } from "../components/contact-support"
 import { Footer } from "../components/footer"
 import { Logo } from "@/components/logo"
 import { useSiteData } from "@/context/SiteDataContext"
+import { AnnouncementDialog } from "@/components/AnnouncementDialog"
 
 export default function Home() {
   const { games: contextGames, settings } = useSiteData()
@@ -190,8 +191,11 @@ export default function Home() {
     <div
       className={`min-h-screen bg-gradient-to-b from-[#0a0a14] to-[#141428] ${ppEditorialNewUltralightItalic.variable} ${inter.variable}`}
     >
+      {/* 公告弹窗 */}
+      <AnnouncementDialog />
+
       {/* 顶部导航栏 */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/10">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/10 dark:bg-white/30 dark:border-black/10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center">
             <Logo />
@@ -204,7 +208,7 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowSearch(!showSearch)}
-                  className="text-white/70 hover:text-white dark:text-white/70 dark:hover:text-white"
+                  className="text-white/70 hover:text-white dark:text-black/70 dark:hover:text-black"
                 >
                   <Search className="h-5 w-5" />
                 </Button>
@@ -212,7 +216,7 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowFavorites(!showFavorites)}
-                  className={`${showFavorites ? "text-[#ff6b4a]" : "text-white/70 hover:text-white dark:text-white/70 dark:hover:text-white"}`}
+                  className={`${showFavorites ? "text-[#ff6b4a]" : "text-white/70 hover:text-white dark:text-black/70 dark:hover:text-black"}`}
                 >
                   <Heart className="h-5 w-5" />
                 </Button>
@@ -225,7 +229,7 @@ export default function Home() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFavorites(!showFavorites)}
-                  className={`ml-2 ${showFavorites ? "bg-[#ff6b4a]/20 text-[#ff6b4a] border-[#ff6b4a]/30" : "text-white/70 dark:text-white/70"}`}
+                  className={`ml-2 ${showFavorites ? "bg-[#ff6b4a]/20 text-[#ff6b4a] border-[#ff6b4a]/30" : "text-white/70 dark:text-black/70 border-white/10 dark:border-black/10"}`}
                 >
                   <Heart className={`h-4 w-4 mr-2 ${showFavorites ? "fill-[#ff6b4a]" : ""}`} />
                   {showFavorites ? "已收藏" : "收藏"}
@@ -253,6 +257,13 @@ export default function Home() {
                   >
                     <User className="mr-2 h-4 w-4" />
                     <span>个人中心</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="hover:bg-white/10 cursor-pointer dark:hover:bg-black/10"
+                    onClick={() => router.push("/contact")}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>联系客服</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="hover:bg-white/10 cursor-pointer dark:hover:bg-black/10"
@@ -304,7 +315,7 @@ export default function Home() {
               variant="ghost"
               size="icon"
               onClick={closeGameDetails}
-              className="absolute top-0 right-0 z-10 text-white/70 hover:text-white dark:text-white/70 dark:hover:text-white"
+              className="absolute top-0 right-0 z-10 text-white/70 hover:text-white dark:text-black/70 dark:hover:text-black"
             >
               <X className="h-6 w-6" />
             </Button>
